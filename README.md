@@ -1,2 +1,2 @@
-# wriot
-WRIOT - Wrapping the Internet of Things
+# WRIOT - Wrapping the Internet of Things
+
