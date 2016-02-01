@@ -122,8 +122,39 @@ class FritzSmartHome {
 			)
 		);
 
-		// @todo: create a device class an return a list of devices
-		return $response;
+		return $this->getDevicesFromResponse($response);
+
+	}
+
+
+	private function getDevicesFromResponse($response)
+	{
+		$devices = array();
+
+
+		$devicesXml = simplexml_load_string($response);
+
+
+
+		foreach($devicesXml as $deviceXml) {
+
+			$options = array();
+
+			$options['name'] = (String) $deviceXml->name;
+
+			$attr = $deviceXml->attributes();
+
+			$options['identifier'] = (String) $attr['identifier'];
+
+			$options['state']      = (int) $deviceXml->switch->state;
+
+			$devices[] = new FritzDevice($this, $options);
+
+		}
+
+
+		return $devices;
+
 
 	}
 
@@ -157,7 +188,7 @@ class FritzSmartHome {
 	 */
 	private function getHash($challenge) {
 
-		return $challenge. '-' . md5(mb_convert_encoding($challenge."-".$this->password,"UTF-16LE"));
+		return $challenge. '-' . md5(mb_convert_encoding($challenge."-".$this->password, "UTF-16LE"));
 
 	}
 
@@ -181,7 +212,11 @@ class FritzSmartHome {
 
 }
 
-/*
+/**
+ * Class FritzDevice
+ *
+ * Model Class for a device
+ */
 class FritzDevice {
 
 	protected $smarthome = NULL;
@@ -194,20 +229,50 @@ class FritzDevice {
 	public $present = NULL;
 	public $switchMode = NULL;
 
+	function __construct($smarthome, $options) {
 
-	static function createFromXml($smarthome, $xml)
-	{
+		$this->smarthome = $smarthome;
 
-		$device = new self;
-
-
-
-
-
-		return $device;
-
+		$this->name = $options['name'];
+		$this->identifier = $options['identifier'];
+		$this->switchState = $options['state'];
 
 	}
 
 
-}*/
+	/**
+	 * Will return the name of the device
+	 *
+	 * @return string
+	 */
+	function getName()
+	{
+		return $this->name;
+
+	}
+
+	/**
+	 * Will return the identifier without zeros
+	 *
+	 * @return string
+	 */
+	function getNormalizedIdentifier()
+	{
+		return trim(str_replace(" ", "", $this->identifier));
+
+	}
+
+
+	/**
+	 * Will return the current switch state as int 1=on, 0=off
+	 *
+	 * @return int
+	 */
+	function getState()
+	{
+		return (int) $this->switchState;
+
+	}
+
+
+}
